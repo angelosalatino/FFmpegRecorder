@@ -29,6 +29,9 @@ private slots:
      void on_startButton_clicked();
      void readyReadStandardOutput();
      void processStarted();
+     void processEnded();
+     void stop();
+     void stopUI();
      void encodingFinished();
      void endRecordingAndClose();
      void on_fileOpenButton_clicked();

@@ -30,7 +30,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(mTranscodingProcess,SIGNAL(readyReadStandardOutput()),this,SLOT(readyReadStandardOutput()));
     connect(mTranscodingProcess, SIGNAL(finished(int)), this, SLOT(encodingFinished()));
 
-    //    this->checkDevices();
 }
 
 MainWindow::~MainWindow()
@@ -38,85 +37,37 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-//void MainWindow::checkDevices()
-//{
-//    QString program = "arecord";
-//    QStringList arguments;
-//    arguments << "-l";
-
-//    QString string = eseguiComando(program, arguments);
-
-//    //Parsing
-//    QRegExp rx("(card)(\\s)(\\d)(:)");
-//    QRegExp rx1("(device)(\\s)(\\d)(:)");
-
-//    QStringList audioDevices;
-//    int pos = 0;
-
-//    while ((pos = rx.indexIn(string, pos)) != -1) {
-//        audioDevices <<"hw:" + rx.cap(3) + ",";
-//        pos += rx.matchedLength();
-//    }
-
-
-//    pos = 0;
-//    int i = 0;
-
-//    while ((pos = rx1.indexIn(string, pos)) != -1) {
-//        QString temp = audioDevices.at(i);
-//        temp.append(rx1.cap(3));
-//        audioDevices.removeAt(i);
-//        audioDevices.insert(i,temp);
-//        pos += rx1.matchedLength();
-//        i++;
-//    }
-//    qDebug()<<audioDevices;
-
-//    arguments.clear();
-//    program.clear();
-
-//    program = "ls";
-//    arguments << "/dev";
-//    string=eseguiComando(program,arguments);
-//    QRegExp rx2("(video)(\\d)");
-//    pos = 0;
-//    QStringList videoDevices;
-//    while ((pos = rx2.indexIn(string, pos)) != -1) {
-//        videoDevices << "/dev/"+rx2.cap(1) + rx2.cap(2);
-//        pos += rx2.matchedLength();
-
-//    }
-//    qDebug()<<videoDevices;
-
-//}
-
-//QString MainWindow::eseguiComando(QString comand, QStringList arguments)
-//{
-//    QString string;
-//    QProcess *myProcess = new QProcess();
-//    myProcess->start(comand, arguments);
-//    myProcess->waitForFinished(-1);
-//    QByteArray result = myProcess->readAllStandardOutput();
-//    myProcess->~QProcess();
-//    return string.append(result);
-//}
-
 void MainWindow::processStarted()
 {
     qDebug() << "processStarted()";
 }
 
+void MainWindow::processEnded()
+{
+    qDebug() << "processEnded()";
+}
+
+void MainWindow::stop()
+{
+    if(this->recording)
+    {
+        mTranscodingProcess->write("q");
+        mTranscodingProcess->waitForFinished(-1);
+        this->stopUI();
+    }
+}
+
+void MainWindow::stopUI()
+{
+    this->ui->startButton->setText("Record");
+    recording = false;
+}
 
 void MainWindow::on_startButton_clicked()
 {
     if(this->recording)
     {
-        QString save("q");
-        QByteArray ex;
-        ex.append(save);
-        mTranscodingProcess->write(ex);
-        this->ui->startButton->setText("Record");
-        recording = false;
+        this->stop();
     } else
     {
 
@@ -134,8 +85,8 @@ void MainWindow::on_startButton_clicked()
 
         QString fileName = output+"/output.avi";
         this->outputFile = fileName;
-//        qDebug() << "output file check " << fileName;
-//        qDebug() << "QFile::exists(fileName) = " << QFile::exists(fileName);
+        //        qDebug() << "output file check " << fileName;
+        //        qDebug() << "QFile::exists(fileName) = " << QFile::exists(fileName);
         if (QFile::exists(fileName)) {
             if (QMessageBox::question(this, tr("ffmpeg"),
                                       tr("There already exists a file called %1 in "
@@ -153,10 +104,18 @@ void MainWindow::on_startButton_clicked()
                 }
             }
         }
-
-        arguments << "-f" << "alsa" << "-ac" << options->getNumChannels() << "-i" << options->getAudioInterface() << "-f" << "video4linux2" << "-framerate" << "30" << "-s" << options->getVideoSize() << "-i" << options->getVideoInterface() << "-acodec" << options->getAudioCodec() << "-vcodec" << options->getVideoCodec() << "-preset" << "ultrafast" << "-crf" << "0" << "-threads" << "0" << fileName;
-
-        qDebug() << arguments;
+        if(options->isThereAudioInterface() && options->isThereVideoInterface())
+            arguments << "-f" << "alsa" << "-ac" << options->getNumChannels() << "-i" << options->getAudioInterface() << "-f" << "video4linux2" << "-framerate" << "30" << "-s" << options->getVideoSize() << "-i" << options->getVideoInterface() << "-acodec" << options->getAudioCodec() << "-vcodec" << options->getVideoCodec() << "-preset" << "ultrafast" << "-crf" << "0" << "-threads" << "0" << fileName;
+        else if(options->isThereAudioInterface()) arguments << "-f" << "alsa" << "-ac" << options->getNumChannels() << "-i" << options->getAudioInterface() << "-f" << "video4linux2" << "-framerate" << "30" << "-s" << options->getVideoSize() << "-i" << options->getVideoInterface() << "-acodec" << options->getAudioCodec() << "-vcodec" << options->getVideoCodec() << "-preset" << "ultrafast" << "-crf" << "0" << "-threads" << "0" << fileName;
+        else if(options->isThereVideoInterface()) arguments << "-f" << "alsa" << "-ac" << options->getNumChannels() << "-i" << options->getAudioInterface() << "-f" << "video4linux2" << "-framerate" << "30" << "-s" << options->getVideoSize() << "-i" << options->getVideoInterface() << "-acodec" << options->getAudioCodec() << "-vcodec" << options->getVideoCodec() << "-preset" << "ultrafast" << "-crf" << "0" << "-threads" << "0" << fileName;
+        else
+        {
+            QMessageBox msgBox;
+            msgBox.setText("Check the options. The operation cannot be peformed.");
+            msgBox.exec();
+            return;
+        }
+        //        qDebug() << arguments;
 
         mTranscodingProcess->setProcessChannelMode(QProcess::MergedChannels);
         mTranscodingProcess->start(program, arguments);
@@ -189,21 +148,15 @@ void MainWindow::encodingFinished()
     else {
         ui->transcodingStatusLabel
                 ->setText("Recording Status: Failed!");
+        this->stopUI();
+
     }
+    this->processEnded();
 }
 
 void MainWindow::endRecordingAndClose()
 {
-    if(this->recording)
-    {
-
-        QString save("q");
-        QByteArray ex;
-        ex.append(save);
-        mTranscodingProcess->write(ex);
-        mTranscodingProcess->waitForFinished(-1);
-    }
-    qDebug()<<"processEnded()";
+    this->stop();
     this->close();
 }
 
@@ -218,8 +171,6 @@ void MainWindow::on_fileOpenButton_clicked()
         ui->fromLineEdit->setText(fileName);
     }
 }
-
-
 
 void MainWindow::on_playOutputButton_clicked()
 {

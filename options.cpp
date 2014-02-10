@@ -83,26 +83,61 @@ QString Options::executeCommand(QString comand, QStringList arguments)
 void Options::setUP(QStringList videoInterfaces, QStringList audioInterfaces)
 {
     //video Comboboxes
+    this->ui->videoBox->insertItem(-1,"Not use Video");
+    this->ui->videoBox->addItems(videoInterfaces);
+    this->ui->videoBox->setCurrentIndex(1);
+
+    this->ui->sizeBox->addItems(QStringList()<<"1024x768");
+    this->ui->sizeBox->setCurrentIndex(0);
+
+    this->ui->vCodecBox->addItems(QStringList()<<"libx264");
+    this->ui->vCodecBox->setCurrentIndex(0);
 
     //audio Comboboxes
+    this->ui->audioBox->insertItem(-1,"Not use Audio");
+    this->ui->audioBox->addItems(audioInterfaces);
+    this->ui->audioBox->setCurrentIndex(1);
+
+    this->ui->channelsBox->addItems(QStringList()<<"1"<<"2");
+    this->ui->channelsBox->setCurrentIndex(0);
+
+    this->ui->aCodecBox->addItems(QStringList()<<"pcm_s16le");
+    this->ui->aCodecBox->setCurrentIndex(0);
+
 
     //set default parameters
+    this->setParameters();
+}
 
-    this->setVideoInterface("/dev/video0");
-    this->setVideoSize("1024x768");
-    this->setVideoCodec("libx264");
+void Options::setParameters()
+{
 
-    this->setAudioInterface("hw:0,0");
-    this->setNumChannels("2");
-    this->setAudioCodec("pcm_s16le");
+    this->setVideoInterface(this->ui->videoBox->currentText());
+    this->setVideoSize(this->ui->sizeBox->currentText());
+    this->setVideoCodec(this->ui->vCodecBox->currentText());
+
+    this->setAudioInterface(this->ui->audioBox->currentText());
+    this->setNumChannels(this->ui->channelsBox->currentText());
+    this->setAudioCodec(this->ui->aCodecBox->currentText());
 }
 
 void Options::on_saveButton_clicked()
 {
+    this->setParameters();
     this->close();
 }
 
+bool Options::isThereAudioInterface()
+{
+    if(this->ui->audioBox->currentIndex() > 0) return true;
+    else return false;
+}
 
+bool Options::isThereVideoInterface()
+{
+    if(this->ui->videoBox->currentIndex() > 0) return true;
+    else return false;
+}
 
 
 

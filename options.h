@@ -18,6 +18,7 @@ public:
     void checkDevices();
     QString executeCommand(QString comand, QStringList arguments);
     void setUP(QStringList videoInterfaces, QStringList audioInterfaces);
+    void setParameters();
     
     QString getVideoInterface() const;
     void setVideoInterface(const QString &value);
@@ -36,6 +37,9 @@ public:
 
     QString getVideoSize() const;
     void setVideoSize(const QString &value);
+
+    bool isThereAudioInterface();
+    bool isThereVideoInterface();
 
 private slots:
     void on_saveButton_clicked();
