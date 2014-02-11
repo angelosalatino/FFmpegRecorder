@@ -83,32 +83,26 @@ void MainWindow::on_startButton_clicked()
             return;
         }
 
-        QString fileName = output+"/output.avi";
-        this->outputFile = fileName;
-        //        qDebug() << "output file check " << fileName;
-        //        qDebug() << "QFile::exists(fileName) = " << QFile::exists(fileName);
-        if (QFile::exists(fileName)) {
-            if (QMessageBox::question(this, tr("ffmpeg"),
-                                      tr("There already exists a file called %1 in "
-                                         "the current directory. Overwrite?").arg(fileName),
-                                      QMessageBox::Yes|QMessageBox::No, QMessageBox::No)
-                    == QMessageBox::No)
-            {
-                return;
-            }
-            else{
-                QFile::remove(fileName);
-                /*qDebug()<<"file dovrebbe essere rimosso";*/
-                while(QFile::exists(fileName)) {
-                    qDebug() << "output file still there";
-                }
-            }
-        }
+
         if(options->isThereAudioInterface() && options->isThereVideoInterface())
+        {
+            QString fileName = output+"/output.avi";
+            this->outputFile = fileName;
             arguments << "-f" << "alsa" << "-ac" << options->getNumChannels() << "-i" << options->getAudioInterface() << "-f" << "video4linux2" << "-framerate" << "30" << "-s" << options->getVideoSize() << "-i" << options->getVideoInterface() << "-acodec" << options->getAudioCodec() << "-vcodec" << options->getVideoCodec() << "-preset" << "ultrafast" << "-crf" << "0" << "-threads" << "0" << fileName;
-        else if(options->isThereAudioInterface()) arguments << "-f" << "alsa" << "-ac" << options->getNumChannels() << "-i" << options->getAudioInterface() << "-f" << "video4linux2" << "-framerate" << "30" << "-s" << options->getVideoSize() << "-i" << options->getVideoInterface() << "-acodec" << options->getAudioCodec() << "-vcodec" << options->getVideoCodec() << "-preset" << "ultrafast" << "-crf" << "0" << "-threads" << "0" << fileName;
-        else if(options->isThereVideoInterface()) arguments << "-f" << "alsa" << "-ac" << options->getNumChannels() << "-i" << options->getAudioInterface() << "-f" << "video4linux2" << "-framerate" << "30" << "-s" << options->getVideoSize() << "-i" << options->getVideoInterface() << "-acodec" << options->getAudioCodec() << "-vcodec" << options->getVideoCodec() << "-preset" << "ultrafast" << "-crf" << "0" << "-threads" << "0" << fileName;
-        else
+        }
+        else if(options->isThereAudioInterface() && !options->isThereVideoInterface())
+        {
+            QString fileName = output+"/output.wav";
+            this->outputFile = fileName;
+            arguments << "-f" << "alsa" << "-ac" << options->getNumChannels() << "-i" << options->getAudioInterface() << "-acodec" << options->getAudioCodec() << fileName;
+        }
+        else if(!options->isThereAudioInterface() && options->isThereVideoInterface())
+        {
+            QString fileName = output+"/output.avi";
+            this->outputFile = fileName;
+            arguments << "-f" << "video4linux2" << "-framerate" << "30" << "-s" << options->getVideoSize() << "-i" << options->getVideoInterface() << "-vcodec" << options->getVideoCodec() << "-preset" << "ultrafast" << "-crf" << "0" << "-threads" << "0" << fileName;
+
+        }else
         {
             QMessageBox msgBox;
             msgBox.setText("Check the options. The operation cannot be peformed.");
@@ -116,6 +110,23 @@ void MainWindow::on_startButton_clicked()
             return;
         }
         //        qDebug() << arguments;
+        if (QFile::exists(this->outputFile)) {
+            if (QMessageBox::question(this, tr("ffmpeg"),
+                                      tr("There already exists a file called %1 in "
+                                         "the current directory. Overwrite?").arg(this->outputFile),
+                                      QMessageBox::Yes|QMessageBox::No, QMessageBox::No)
+                    == QMessageBox::No)
+            {
+                return;
+            }
+            else{
+                QFile::remove(this->outputFile);
+                /*qDebug()<<"file dovrebbe essere rimosso";*/
+                while(QFile::exists(this->outputFile)) {
+                    qDebug() << "output file still there";
+                }
+            }
+        }
 
         mTranscodingProcess->setProcessChannelMode(QProcess::MergedChannels);
         mTranscodingProcess->start(program, arguments);

@@ -44,6 +44,10 @@ public:
 private slots:
     void on_saveButton_clicked();
 
+    void on_testVideo_clicked();
+
+    void on_testAudio_clicked();
+
 private:
     Ui::Options *ui;
 

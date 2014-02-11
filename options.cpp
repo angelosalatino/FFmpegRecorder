@@ -65,7 +65,7 @@ void Options::checkDevices()
         pos += rx2.matchedLength();
 
     }
-   // qDebug()<<videoDevices;
+    // qDebug()<<videoDevices;
     this->setUP(videoDevices,audioDevices);
 }
 
@@ -212,3 +212,13 @@ void Options::setVideoInterface(const QString &value)
 }
 
 
+
+void Options::on_testVideo_clicked()
+{
+    this->executeCommand("ffplay",QStringList()<< "-f" << "video4linux2" << this->ui->videoBox->currentText() << "-x" << "320" << "-y" << "240");
+}
+
+void Options::on_testAudio_clicked()
+{
+
+}
