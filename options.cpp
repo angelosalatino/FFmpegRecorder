@@ -139,7 +139,20 @@ bool Options::isThereVideoInterface()
     else return false;
 }
 
+void Options::on_testVideo_clicked()
+{
+    this->executeCommand("ffplay",QStringList()<< "-f" << "video4linux2" << this->ui->videoBox->currentText() << "-x" << "320" << "-y" << "240");
+}
 
+void Options::on_testAudio_clicked()
+{
+    /*
+     * Record a sound and play after
+     */
+    this->executeCommand("ffmpeg",QStringList()<<"-f" << "alsa" << "-ac" << this->ui->channelsBox->currentText() << "-i" << this->ui->audioBox->currentText() << "-acodec" << this->ui->aCodecBox->currentText() << "./temp.wav");
+    // the command above should be temporized....
+    this->executeCommand("ffplay",QStringList()<< "./temp.wav");
+}
 
 
 
@@ -211,14 +224,3 @@ void Options::setVideoInterface(const QString &value)
     videoInterface = value;
 }
 
-
-
-void Options::on_testVideo_clicked()
-{
-    this->executeCommand("ffplay",QStringList()<< "-f" << "video4linux2" << this->ui->videoBox->currentText() << "-x" << "320" << "-y" << "240");
-}
-
-void Options::on_testAudio_clicked()
-{
-
-}
