@@ -2,6 +2,7 @@
 #define OPTIONS_H
 
 #include <QWidget>
+#include <QProcess>
 
 namespace Ui {
 class Options;
@@ -48,6 +49,8 @@ private slots:
 
     void on_testAudio_clicked();
 
+    void stopAndShutdown();
+
 private:
     Ui::Options *ui;
 
@@ -58,6 +61,12 @@ private:
     QString audioCodec;
     QString numChannels;
     QString videoSize;
+
+    QProcess * recordMic;
+
+    bool recordingAudio;
+
+    QString file;
 };
 
 #endif // OPTIONS_H

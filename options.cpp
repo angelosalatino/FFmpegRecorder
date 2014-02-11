@@ -1,7 +1,8 @@
 #include "options.h"
 #include "ui_options.h"
-#include <QProcess>
 #include <QDebug>
+#include <QTimer>
+#include <QFile>
 
 Options::Options(QWidget *parent) :
     QWidget(parent),
@@ -10,6 +11,9 @@ Options::Options(QWidget *parent) :
     ui->setupUi(this);
     this->setWindowTitle("Options");
     this->checkDevices();
+    recordMic = new QProcess();
+    this->recordingAudio = false;
+    file = "./temp.wav";
 }
 
 Options::~Options()
@@ -149,9 +153,40 @@ void Options::on_testAudio_clicked()
     /*
      * Record a sound and play after
      */
-    this->executeCommand("ffmpeg",QStringList()<<"-f" << "alsa" << "-ac" << this->ui->channelsBox->currentText() << "-i" << this->ui->audioBox->currentText() << "-acodec" << this->ui->aCodecBox->currentText() << "./temp.wav");
-    // the command above should be temporized....
-    this->executeCommand("ffplay",QStringList()<< "./temp.wav");
+
+    this->ui->errorLabel->setText("");
+    if(!recordingAudio)
+    {
+        QFile::remove(file);
+        recordingAudio = true;
+        recordMic->setProcessChannelMode(QProcess::MergedChannels);
+        recordMic->start("ffmpeg",QStringList()<<"-f" << "alsa" << "-ac" << this->ui->channelsBox->currentText() << "-i" << this->ui->audioBox->currentText() << "-acodec" << this->ui->aCodecBox->currentText() << file);
+        this->ui->testAudio->setText("Recording...");
+        QTimer::singleShot(3000, this, SLOT(stopAndShutdown()));
+
+    }
+    else
+    {
+        this->executeCommand("ffplay",QStringList()<< file);
+        this->ui->testAudio->setText("Test Audio");
+        recordingAudio = false;
+    }
+}
+
+void Options::stopAndShutdown()
+{
+    recordMic->write("q");
+    recordMic->waitForFinished(-1);
+    if (QFile::exists(file)) {
+        this->ui->testAudio->setText("Play");
+        this->ui->errorLabel->setText("Ok!");
+    }
+    else
+    {
+        this->ui->testAudio->setText("Test Audio");
+        this->ui->errorLabel->setText("Error during the recording. Check the options!");
+        this->recordingAudio = false;
+    }
 }
 
 

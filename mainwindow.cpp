@@ -14,6 +14,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    this->setWindowTitle("FFmpeg Recorder");
 
     // Play button for output - initially disabled
     ui->playOutputButton->setEnabled(false);

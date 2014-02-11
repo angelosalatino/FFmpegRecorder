@@ -147,6 +147,13 @@
             </spacer>
            </item>
            <item>
+            <widget class="QLabel" name="errorLabel">
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QPushButton" name="testAudio">
              <property name="text">
               <string>Test Audio</string>
